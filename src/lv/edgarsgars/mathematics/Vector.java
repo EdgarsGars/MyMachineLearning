@@ -5,10 +5,9 @@
  */
 package lv.edgarsgars.mathematics;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -22,8 +21,24 @@ public class Vector implements Iterable<Double> {
         vector.ensureCapacity(size);
     }
 
+    public Vector(String pattern) {
+        String[] params = pattern.split(":");
+        double from = Double.parseDouble(params[0]);
+        double step = Double.parseDouble(params[1]);
+        double to = Double.parseDouble(params[2]);
+        for (double d = from; d < to; d += step) {
+            vector.add(d);
+        }
+    }
+
     public Vector(double... values) {
         add(values);
+    }
+
+    public Vector(List<Double> values) {
+        for (Double value : values) {
+            add(value);
+        }
     }
 
     public Vector(Vector vector) {
@@ -97,4 +112,60 @@ public class Vector implements Iterable<Double> {
         }
         return true;
     }
+
+    public Vector remove(int index) {
+        Vector copy = this.copy();
+        copy.vector.remove(index);
+        return copy;
+    }
+
+    public Vector removeAll(double value) {
+        Vector copy = this.copy();
+        while (copy.vector.contains(value)) {
+            copy.vector.remove(value);
+        }
+        return copy;
+    }
+
+    public Vector copy() {
+        Vector cop = new Vector();
+        for (double d : vector) {
+            cop.add(d);
+        }
+        return cop;
+
+    }
+
+    public double minValue() {
+        double min = vector.get(0);
+        for (double thi : this) {
+            if (thi < min) {
+                min = thi;
+            }
+        }
+        return min;
+    }
+
+    public double maxValue() {
+        double max = vector.get(0);
+        for (double thi : this) {
+            if (thi > max) {
+                max = thi;
+            }
+        }
+        return max;
+    }
+
+    public double mean() {
+        double sum = 0;
+        for (Double thi : this) {
+            sum += thi;
+        }
+        return sum / (double) size();
+    }
+
+    public ArrayList<Double> asList() {
+        return this.copy().vector;
+    }
+
 }

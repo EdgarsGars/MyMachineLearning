@@ -70,7 +70,7 @@ public class VectorTest {
         vector.add(v);
         vector2.add(v);
         assertTrue(vector.get(0) == v[0] && vector.get(1) == v[1] && vector.get(2) == v[2] && vector.get(3) == v[3]);
-        assertTrue(vector.get(3) == v[0] && vector.get(4) == v[1] && vector.get(5) == v[2] && vector.get(6) == v[3]);
+        assertTrue(vector2.get(3) == v[0] && vector2.get(4) == v[1] && vector2.get(5) == v[2] && vector2.get(6) == v[3]);
     }
 
     /**
@@ -78,7 +78,13 @@ public class VectorTest {
      */
     @Test
     public void testSet() {
-       
+        Vector vector = new Vector(3);
+        vector.set(0, 1);
+        vector.set(1, 2);
+        vector.set(2, 3);
+
+        assertTrue(vector.get(0) == 1 && vector.get(1) == 2 && vector.get(2) == 3);
+
     }
 
     /**
@@ -86,7 +92,8 @@ public class VectorTest {
      */
     @Test
     public void testToString() {
-      
+        Vector vector = new Vector(3, 2, 1);
+        assertEquals("[3.0,2.0,1.0]", vector.toString());
     }
 
     /**
@@ -94,7 +101,11 @@ public class VectorTest {
      */
     @Test
     public void testGet() {
-     
+        Vector v = new Vector(3, 5, 3, 2);
+        assertEquals(3.0, v.get(0));
+        assertEquals(5.0, v.get(1));
+        assertEquals(3.0, v.get(2));
+        assertEquals(2.0, v.get(3));
     }
 
     /**
@@ -102,7 +113,9 @@ public class VectorTest {
      */
     @Test
     public void testSize() {
-      
+        Vector v = new Vector(3, 5, 2, 3, 4);
+        assertEquals(5, v.size());
+
     }
 
     /**
@@ -110,7 +123,7 @@ public class VectorTest {
      */
     @Test
     public void testSum() {
-       
+
     }
 
     /**
@@ -118,7 +131,7 @@ public class VectorTest {
      */
     @Test
     public void testSubtract() {
-      
+
     }
 
     /**
@@ -126,7 +139,7 @@ public class VectorTest {
      */
     @Test
     public void testMultiply() {
-      
+
     }
 
     /**
@@ -134,7 +147,7 @@ public class VectorTest {
      */
     @Test
     public void testIterator() {
-      
+
     }
 
     /**
@@ -142,7 +155,7 @@ public class VectorTest {
      */
     @Test
     public void testEquals() {
-      
+
     }
 
 }

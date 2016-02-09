@@ -5,19 +5,23 @@
  */
 package lv.edgarsgars.mathematics;
 
+import lv.edgarsgars.utils.VectorUtils;
+import lv.edgarsgars.vizualization.Plot;
+
 /**
  *
  * @author Edgar_000
  */
 public class Test {
-    
+
     public static void main(String[] args) {
-        Vector vec = new Vector(3.3, 4.1, 5, 2);
-        Vector vec2 = new Vector(vec);
-        System.out.println(vec.sum(vec2));
-        System.out.println(vec.subtract(vec2));
-        System.out.println(vec.multiply(3));
-        System.out.println(vec.equals(vec));
-        System.out.println(vec.equals(vec2.multiply(0.3)));
+        Matrix a = new Matrix(new double[][]{{3,2},{3,3},{3,2}});
+        Matrix b = new Matrix(new double[][]{{3,3,3},{3,2,1}});
+        Matrix c = a.product(b);
+        System.out.println(c);
+        
+        
+        
+        
     }
 }
