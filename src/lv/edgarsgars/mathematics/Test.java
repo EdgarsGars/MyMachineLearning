@@ -15,10 +15,9 @@ import lv.edgarsgars.vizualization.Plot;
 public class Test {
 
     public static void main(String[] args) {
-        Matrix a = new Matrix(new double[][]{{3,2},{3,3},{3,2}});
-        Matrix b = new Matrix(new double[][]{{3,3,3},{3,2,1}});
-        Matrix c = a.product(b);
-        System.out.println(c);
+        Vector x = new Vector("-10:0.1:10");
+        Vector y = VectorUtils.pow(x,5);
+        Plot.showPlot(x, y);
         
         
         
