@@ -11,58 +11,59 @@ package lv.edgarsgars.mathematics;
  */
 public class Matrix {
 
-    private double[][] matrix;
+    private Vector[] matrix;
 
     public Matrix(int n, int m) {
-        matrix = new double[m][n];
+        matrix = new Vector[n];
+        for (int i = 0; i < n; i++) {
+            matrix[i] = new Vector(m);
+        }
     }
 
     public Matrix(double[][] matrix) {
-        this.matrix = matrix;
+        // this.matrix = matrix;
     }
 
-    public double get(int k, int r) {
-        return matrix[r][k];
+    public double get(int r, int k) {
+        return matrix[r].get(k);
     }
 
-    public void set(int k, int r, double value) {
-        matrix[r][k] = value;
+    public void set(int r, int k, double value) {
+        matrix[r].set(k, value);
     }
 
     public Vector toVector() {
         Vector v = new Vector();
-        for (double[] d : matrix) {
-            v.add(d);
+        for (Vector vec : matrix) {
+            v.add(vec);
         }
         return v;
     }
 
     public Vector getRow(int index) {
-        return new Vector(matrix[index]);
+        return matrix[index].copy();
     }
 
     public Vector getCol(int index) {
         Vector v = new Vector();
-        for (int i = 0; i < matrix[0].length; i++) {
-            v.add(matrix[i][index]);
+        for (int i = 0; i < matrix[0].size(); i++) {
+            v.add(matrix[i].get(index));
         }
         return v;
     }
 
     public Matrix copy() {
-        Matrix m = new Matrix(matrix.length, matrix[0].length);
-        for (int r = 0; r < matrix.length; r++) {
-            for (int k = 0; k < matrix[0].length; k++) {
-                m.set(r, k, matrix[r][k]);
-            }
+        Matrix m = new Matrix(0,0);
+        for (int i = 0; i < getM(); i++) {
+            m.matrix[i] = matrix[i].copy();
         }
         return m;
     }
 
     public Matrix scalar(double scalar) {
         Matrix cop = copy();
-        for (int r = 0; r < matrix.length; r++) {
-            for (int k = 0; k < matrix[0].length; k++) {
+        for (int r = 0; r < getN(); r++) {
+            for (int k = 0; k < getM(); k++) {
                 cop.set(r, k, cop.get(r, k) * scalar);
             }
         }
@@ -87,11 +88,11 @@ public class Matrix {
     }
 
     public int getN() {
-        return matrix[0].length;
+        return matrix.length;
     }
 
     public int getM() {
-        return matrix.length;
+        return matrix[0].size();
     }
 
     @Override
@@ -99,7 +100,7 @@ public class Matrix {
         String s = "";
         for (int j = 0; j < getM(); j++) {
             for (int i = 0; i < getN(); i++) {
-                s += matrix[j][i] + " ";
+                s += matrix[j].get(i) + " ";
             }
             s += "\n";
         }

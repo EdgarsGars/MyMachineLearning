@@ -18,7 +18,9 @@ public class Vector implements Iterable<Double> {
     private ArrayList<Double> vector = new ArrayList<>();
 
     public Vector(int size) {
-        vector.ensureCapacity(size);
+        for (int i = 0; i < size; i++) {
+            add(0);
+        }
     }
 
     public Vector(String pattern) {
@@ -54,6 +56,12 @@ public class Vector implements Iterable<Double> {
 
     public void add(double... values) {
         for (double value : values) {
+            this.vector.add(value);
+        }
+    }
+    
+    public void add(Vector vec) {
+        for (double value : vec) {
             this.vector.add(value);
         }
     }
