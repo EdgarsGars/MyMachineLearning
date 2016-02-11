@@ -21,7 +21,42 @@ public class Matrix {
     }
 
     public Matrix(double[][] matrix) {
-        // this.matrix = matrix;
+        this.matrix = new Vector[matrix.length];
+        for (int i = 0; i < matrix.length; i++) {
+            this.matrix[i] = new Vector(matrix[i]);
+        }
+    }
+
+    /**
+     * Input must be as in example [3 2 1; 3 2 1; 5 7.5 -3]
+     *
+     * @param values - the string representing vector
+     */
+    public Matrix(String values) {
+        values = values.substring(1, values.length() - 1);
+        String[] rows = values.split(";");
+        int rowCount = rows.length;
+        int colCount = (rows[0].trim().replaceAll(" +", " ").split(" ")).length;
+        this.matrix = new Vector[rowCount];
+        for (int i = 0; i < rows.length; i++) {
+            this.matrix[i] = new Vector();
+            String[] val = rows[i].trim().replaceAll(" +", " ").split(" ");
+            for (int j = 0; j < val.length; j++) {
+                this.matrix[i].add(Double.parseDouble(val[j]));
+            }
+        }
+
+    }
+
+    public Matrix(Vector v) {
+        this.matrix = new Vector[]{v.copy()};
+    }
+
+    public Matrix(Vector[] v) {
+        this.matrix = new Vector[v.length];
+        for (int i = 0; i < v.length; i++) {
+            this.matrix[i] = v[i].copy();
+        }
     }
 
     public double get(int r, int k) {
@@ -53,8 +88,8 @@ public class Matrix {
     }
 
     public Matrix copy() {
-        Matrix m = new Matrix(0,0);
-        for (int i = 0; i < getM(); i++) {
+        Matrix m = new Matrix(getRowCount(), getCollumCount());
+        for (int i = 0; i < getRowCount(); i++) {
             m.matrix[i] = matrix[i].copy();
         }
         return m;
@@ -62,21 +97,19 @@ public class Matrix {
 
     public Matrix scalar(double scalar) {
         Matrix cop = copy();
-        for (int r = 0; r < getN(); r++) {
-            for (int k = 0; k < getM(); k++) {
-                cop.set(r, k, cop.get(r, k) * scalar);
-            }
+        for (int i = 0; i < cop.getRowCount(); i++) {
+            cop.matrix[i] = cop.matrix[i].multiply(scalar);
         }
         return cop;
     }
 
-    public Matrix product(Matrix b) {
+    public Matrix dot(Matrix b) {
         Matrix product;
-        if (getN() == b.getM()) {
-            product = new Matrix(b.getM(), getN());
-            for (int j = 0; j < product.getM(); j++) {
-                for (int i = 0; i < product.getN(); i++) {
-                    for (int k = 0; k < getN(); k++) {
+        if (getCollumCount() == b.getRowCount()) {
+            product = new Matrix(getRowCount(), b.getCollumCount());
+            for (int i = 0; i < product.getRowCount(); i++) {
+                for (int j = 0; j < product.getCollumCount(); j++) {
+                    for (int k = 0; k < getCollumCount(); k++) {
                         product.set(i, j, product.get(i, j) + get(i, k) * b.get(k, j));
                     }
                 }
@@ -87,24 +120,50 @@ public class Matrix {
         return product;
     }
 
-    public int getN() {
+    public Matrix dot(Vector v) {
+        Matrix b = new Matrix(v);
+        return dot(b);
+    }
+
+    public int getRowCount() {
         return matrix.length;
     }
 
-    public int getM() {
+    public int getCollumCount() {
         return matrix[0].size();
     }
 
     @Override
     public String toString() {
         String s = "";
-        for (int j = 0; j < getM(); j++) {
-            for (int i = 0; i < getN(); i++) {
-                s += matrix[j].get(i) + " ";
-            }
-            s += "\n";
+        for (Vector vector : matrix) {
+            s += vector + "\n";
         }
         return s;
+    }
+
+    public Matrix transponse() {
+        Matrix temp = new Matrix(getCollumCount(), getRowCount());
+        for (int i = 0; i < getRowCount(); i++) {
+            for (int j = 0; j < getCollumCount(); j++) {
+                temp.set(j, i, get(i, j));
+            }
+        }
+        return temp;
+    }
+
+    public Matrix add(double value) {
+        Matrix tmp = copy();
+        for (int i = 0; i < tmp.getRowCount(); i++) {
+            for (int j = 0; j < tmp.getCollumCount(); i++) {
+                tmp.set(i, j, get(i, j) + value);
+            }
+        }
+        return tmp;
+    }
+
+    public int size() {
+        return getRowCount() * getCollumCount();
     }
 
 }

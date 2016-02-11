@@ -5,10 +5,18 @@
  */
 package lv.edgarsgars.utils;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import lv.edgarsgars.mathematics.Matrix;
+import lv.edgarsgars.mathematics.Statistics;
 import lv.edgarsgars.mathematics.Vector;
 
 /**
@@ -46,7 +54,7 @@ public class VectorUtils {
             Collections.sort(list, new Comparator<Double>() {
                 @Override
                 public int compare(Double lhs, Double rhs) {
-                // TODO Auto-generated method stub
+                    // TODO Auto-generated method stub
 
                     // comparator method will sort the second list also according to
                     // the changes made with list a
@@ -84,6 +92,58 @@ public class VectorUtils {
             cosvec.add(Math.cos(val));
         }
         return cosvec;
+    }
+
+    public static Vector sigmoid(Vector vec) {
+        Vector sigm = new Vector();
+        for (Double x : vec) {
+            sigm.add(Statistics.sigmoid(x));
+        }
+        return sigm;
+    }
+
+    public static Vector dsigmoid(Vector vec) {
+        Vector dsigm = new Vector();
+        for (Double x : vec) {
+            dsigm.add(Statistics.dsigmoid(x));
+        }
+        return dsigm;
+    }
+
+    public static Matrix reshape(Vector v, int n, int m) {
+        Matrix result = new Matrix(n, m);
+        if (v.size() == n * m) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < m; j++) {
+                    result.set(i, j, v.get(i * m + j));
+                }
+            }
+        }
+        return result;
+    }
+
+    public static Vector[] loadDataFromFile(String filepath, String separator) {
+        ArrayList<String[]> values = new ArrayList<>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filepath));
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                values.add(line.split(separator));
+            }
+            reader.close();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(VectorUtils.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(VectorUtils.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        Vector[] rez = new Vector[values.size()];
+        for (int i = 0; i < rez.length; i++) {
+            rez[i] = new Vector();
+            for (int j = 0; j < values.get(i).length; j++) {
+                rez[i].add(Double.parseDouble(values.get(i)[j]));
+            }
+        }
+        return rez;
     }
 
 }

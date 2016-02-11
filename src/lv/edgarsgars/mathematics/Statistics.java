@@ -43,8 +43,13 @@ public class Statistics {
         double r = 1.0 - (sqerror / variancey);
         return new Vector(m, b, r);
     }
-    
-    
-    
+
+    public static double sigmoid(double d) {
+        return 1.0 / (1.0 + Math.exp(-d));
+    }
+
+    public static double dsigmoid(double d) {
+        return sigmoid(d) * (1.0 - sigmoid(d));
+    }
 
 }

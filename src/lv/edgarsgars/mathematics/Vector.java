@@ -24,12 +24,14 @@ public class Vector implements Iterable<Double> {
     }
 
     public Vector(String pattern) {
-        String[] params = pattern.split(":");
-        double from = Double.parseDouble(params[0]);
-        double step = Double.parseDouble(params[1]);
-        double to = Double.parseDouble(params[2]);
-        for (double d = from; d < to; d += step) {
-            vector.add(d);
+        if (pattern.contains(":")) {
+            String[] params = pattern.split(":");
+            double from = Double.parseDouble(params[0]);
+            double step = Double.parseDouble(params[1]);
+            double to = Double.parseDouble(params[2]);
+            for (double d = from; d < to; d += step) {
+                vector.add(d);
+            }
         }
     }
 
@@ -59,7 +61,7 @@ public class Vector implements Iterable<Double> {
             this.vector.add(value);
         }
     }
-    
+
     public void add(Vector vec) {
         for (double value : vec) {
             this.vector.add(value);
@@ -91,6 +93,14 @@ public class Vector implements Iterable<Double> {
         return sum;
     }
 
+    public Vector sum(double num) {
+        Vector sum = new Vector(size());
+        for (int i = 0; i < this.vector.size(); i++) {
+            sum.add(num + vector.get(i));
+        }
+        return sum;
+    }
+
     public Vector subtract(Vector vec) {
         Vector subtract = new Vector(vec.size());
         for (int i = 0; i < this.vector.size(); i++) {
@@ -100,9 +110,18 @@ public class Vector implements Iterable<Double> {
     }
 
     public Vector multiply(double k) {
-        Vector rez = new Vector(vector.size());
+        Vector rez = new Vector();
         for (int i = 0; i < vector.size(); i++) {
             rez.add(vector.get(i) * k);
+        }
+        return rez;
+    }
+
+    public Vector multiply(Vector v) {
+
+        Vector rez = new Vector();
+        for (int i = 0; i < vector.size(); i++) {
+            rez.add(vector.get(i) * v.get(i));
         }
         return rez;
     }
@@ -174,6 +193,14 @@ public class Vector implements Iterable<Double> {
 
     public ArrayList<Double> asList() {
         return this.copy().vector;
+    }
+
+    public Matrix transponse() {
+        Matrix m = new Matrix(size(), 1);
+        for (int i = 0; i < size(); i++) {
+            m.set(i, 0, get(i));
+        }
+        return m;
     }
 
 }
