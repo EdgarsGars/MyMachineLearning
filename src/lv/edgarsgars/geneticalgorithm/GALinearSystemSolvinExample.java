@@ -8,6 +8,7 @@ package lv.edgarsgars.geneticalgorithm;
 import lv.edgarsgars.geneticalgorithm.selectionoperator.RouleteSelector;
 import lv.edgarsgars.geneticalgorithm.crossoveroperators.SinglepointCrossover;
 import java.util.ArrayList;
+import lv.edgarsgars.geneticalgorithm.GA.TARGET;
 import lv.edgarsgars.geneticalgorithm.commongenes.DoubleGene;
 import lv.edgarsgars.mathematics.Matrix;
 import lv.edgarsgars.mathematics.Vector;
@@ -30,20 +31,11 @@ public class GALinearSystemSolvinExample {
     public static void main(String[] args) {
         int populationSize = 100;
         int iterations = 5000;
+        int bz;
         double mutationRate = 0.25;
         double elitism = 0.15;
 
         GA ga = new GA() {
-            @Override
-            public int compare(Chromosome o1, Chromosome o2) {
-                if (o1.fitness - o2.fitness > 0) {
-                    return 1;
-                } else if (o1.fitness - o2.fitness < 0) {
-                    return -1;
-                } else {
-                    return 0;
-                }
-            }
 
             @Override
             public double fitness(Chromosome c) {
@@ -58,6 +50,11 @@ public class GALinearSystemSolvinExample {
                 double dist = Math.sqrt(Math.pow(Ax.get(0, 0) - b.get(0, 0), 2) + Math.pow(Ax.get(1, 0) - b.get(1, 0), 2));
                 return dist;
             }
+
+            @Override
+            public void mutate(Chromosome c) {
+                c.mutateGenes(0.7);
+            }
         };
 
         ArrayList<Chromosome> population = new ArrayList<Chromosome>();
@@ -67,7 +64,7 @@ public class GALinearSystemSolvinExample {
 
         Chromosome[] pop = (Chromosome<DoubleGene>[]) population.toArray(new Chromosome[populationSize]);
         for (int i = 0; i < iterations; i++) {
-            pop = ga.createNewPopulation(pop, Chromosome.class, mutationRate, elitism, new RouleteSelector(), new SinglepointCrossover());
+            pop = ga.createNewPopulation(pop, Chromosome.class, mutationRate, elitism, new RouleteSelector(), new SinglepointCrossover(), TARGET.MINIMIZE);
         }
 
         ArrayList<DoubleGene> genes = (ArrayList<DoubleGene>) pop[0].genes;

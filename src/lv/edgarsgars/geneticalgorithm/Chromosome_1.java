@@ -48,12 +48,21 @@ public class Chromosome<E> implements Comparable<Chromosome<E>> {
     }
 
     public String toString() {
-        String s = "[";
+        String s = "{" + genes.size() + "}[";
         for (E gene : genes) {
             s += gene + ",";
         }
         // s = s.substring(0, s.length() - 2);
         s += "]";
         return s;
+    }
+
+    public void mutateGenes(double mutationRate) {
+        for (int a = 0; a < genes.size(); a++) {
+            if (Math.random() < mutationRate) {
+                Gene g = (Gene) genes.get(a);
+                g.mutate();
+            }
+        }
     }
 }

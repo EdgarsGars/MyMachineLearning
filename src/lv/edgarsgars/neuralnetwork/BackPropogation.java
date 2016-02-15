@@ -5,7 +5,6 @@
  */
 package lv.edgarsgars.neuralnetwork;
 
-import com.sun.org.glassfish.external.statistics.Statistic;
 import lv.edgarsgars.mathematics.Matrix;
 import lv.edgarsgars.mathematics.Statistics;
 import lv.edgarsgars.mathematics.Vector;
