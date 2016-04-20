@@ -5,7 +5,7 @@
  */
 package lv.edgarsgars.vizualization;
 
-import lv.edgarsgars.mathematics.Vector;
+//import lv.edgarsgars.mathematics.Vector;
 
 /**
  *
@@ -15,7 +15,7 @@ public interface VizualPlot {
 
     public void showPlot();
 
-    public void showPlot(Vector x, Vector... y);
+   // public void showPlot(Vector x, Vector... y);
     
 
 }

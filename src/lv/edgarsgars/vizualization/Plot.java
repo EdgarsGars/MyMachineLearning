@@ -14,15 +14,14 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import lv.edgarsgars.mathematics.Vector;
+
 import lv.edgarsgars.utils.VectorUtils;
 
 /**
  *
  * @author edgars.garsneks
  */
-public class Plot extends JPanel {
-
+public class Plot extends JPanel {/*
     private Point xBounds = new Point(-1, 1);
     private Point yBounds = new Point(-1, 1);
     private Point center = new Point(0, 0);
@@ -112,5 +111,5 @@ public class Plot extends JPanel {
         this.ydata = sortedVectors[1];
 
     }
-
+     */
 }

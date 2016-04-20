@@ -5,8 +5,9 @@
  */
 package lv.edgarsgars.neuralnetwork;
 
+import lv.edgarsgars.mathematics.MathUtils;
 import lv.edgarsgars.mathematics.Matrix;
-import lv.edgarsgars.mathematics.Vector;
+import lv.edgarsgars.utils.CustomFunction;
 import lv.edgarsgars.utils.MatrixUtils;
 import lv.edgarsgars.utils.VectorUtils;
 
@@ -16,59 +17,45 @@ import lv.edgarsgars.utils.VectorUtils;
  */
 public class FeedForwardNet implements NeuralNetwork {
 
-    private Vector[] neurons;
+    private Matrix input;
+    private Matrix[] neurons;
     private Matrix[] weights;
+    private CustomFunction sigmoid = new CustomFunction() {
+        @Override
+        public double functionOf(double val) {
+            return 1.0 / (1.0 + Math.exp(-val));
+        }
+    };
 
     public FeedForwardNet(int[] sizes) {
-        neurons = new Vector[sizes.length];
-        for (int i = 0; i < sizes.length; i++) {
+        neurons = new Matrix[sizes.length];
+        for (int i = 0; i < sizes.length - 1; i++) {
             // System.out.println("Creating layer with size " + sizes[i]);
-            neurons[i] = new Vector(sizes[i]);
-            System.out.println(neurons[i]);
+            neurons[i] = new Matrix(sizes[i] + 1, 1);
+            //  System.out.println(neurons[i]);
         }
+        neurons[neurons.length - 1] = new Matrix(sizes[sizes.length - 1], 1);
         weights = new Matrix[sizes.length - 1];
         for (int i = 0; i < weights.length; i++) {
-            weights[i] = MatrixUtils.getRandom(neurons[i].size(), neurons[i + 1].size(), -1, 1);
-            //weights[i] = MatrixUtils.getOnes(neurons[i].size(), neurons[i + 1].size()).scalar(0.5);
+            //weights[i] = MatrixUtils.getRandom(neurons[i].size(), neurons[i + 1].size(), -1, 1);
+            weights[i] = MatrixUtils.getOnes(neurons[i].size(), neurons[i + 1].size()).scalar(0.5);
         }
     }
 
     @Override
-    public Vector getOutput() {
-        return VectorUtils.sigmoid(neurons[neurons.length - 1].copy());
-    }
-
-    @Override
-    public void setInput(Vector vector) {
-        neurons[0] = vector.copy();
-    }
-
-    @Override
-    public Vector predict(Vector data) {
-        setInput(data);
-        feedForward();
-        return getOutput();
+    public Matrix getOutput() {
+        return MathUtils.applyFunction(neurons[neurons.length - 1], sigmoid);
     }
 
     public void feedForward() {
-        for (int i = 1; i < neurons.length; i++) {
-            Vector neuronA = neurons[i - 1];
-            if (i != 1) {
-                neuronA = VectorUtils.sigmoid(neurons[i - 1]);
-            }
-            neurons[i] = new Vector(neurons[i].size());
-            Vector neuronB = neurons[i];
-            Matrix w = weights[i - 1];
-            for (int a = 0; a < neuronA.size(); a++) {
-                for (int b = 0; b < neuronB.size(); b++) {
-                    //  System.out.println(i + " " + k + " " + r);
-                    neuronB.set(b, neuronB.get(b) + w.get(a, b) * neuronA.get(a));
 
-                  
-
-                }
-                //System.out.println("");
-            }
+        neurons[0] = input;
+        for (int l = 0; l < getWeights().length; l++) {
+            Matrix dotv = neurons[l].dot(weights[l]);
+            
+            System.out.println(dotv);
+            Matrix act = sigmoid(dotv);
+            neurons[l + 1] = act;
         }
     }
 
@@ -87,8 +74,8 @@ public class FeedForwardNet implements NeuralNetwork {
     }
 
     @Override
-    public Vector[] getNeurons() {
-        Vector[] v = new Vector[neurons.length];
+    public Matrix[] getNeurons() {
+        Matrix[] v = new Matrix[neurons.length];
         for (int i = 0; i < v.length; i++) {
             v[i] = neurons[i].copy();
         }
@@ -96,10 +83,10 @@ public class FeedForwardNet implements NeuralNetwork {
     }
 
     @Override
-    public Vector getNeuronCounts() {
-        Vector sizes = new Vector();
+    public Matrix getNeuronCounts() {
+        Matrix sizes = new Matrix(1, neurons.length);
         for (int i = 0; i < neurons.length; i++) {
-            sizes.add(neurons[i].size());
+            sizes.set(neurons[i].size(), 0, i);
         }
         return sizes;
     }
@@ -119,4 +106,31 @@ public class FeedForwardNet implements NeuralNetwork {
         return s;
     }
 
+    @Override
+    public Matrix predict(Matrix data) {
+         data = MatrixUtils.getOnes(data.getRowCount(), 1).hcat(data);
+        Matrix[] y = new Matrix[data.getRowCount()];
+        Matrix[] dataRows = data.getRows();
+        for (int i = 0; i < dataRows.length; i++) {
+            y[i] = new Matrix(1, neurons[neurons.length - 1].getCollumCount());
+            setInput(dataRows[i]);
+            feedForward();
+        }
+        return new Matrix(y);
+    }
+
+    @Override
+    public Matrix getInput() {
+        return input.copy();
+    }
+
+    @Override
+    public void setInput(Matrix vector) {
+        neurons[0] = vector;
+        input = vector;
+    }
+
+    public Matrix sigmoid(Matrix m) {
+        return MathUtils.applyFunction(m, sigmoid);
+    }
 }

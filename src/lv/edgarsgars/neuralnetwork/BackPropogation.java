@@ -5,9 +5,13 @@
  */
 package lv.edgarsgars.neuralnetwork;
 
+import java.util.ArrayList;
+import java.util.List;
+import lv.edgarsgars.mathematics.MathUtils;
 import lv.edgarsgars.mathematics.Matrix;
-import lv.edgarsgars.mathematics.Statistics;
-import lv.edgarsgars.mathematics.Vector;
+import lv.edgarsgars.utils.CustomFunction;
+import lv.edgarsgars.utils.MatrixUtils;
+import lv.edgarsgars.utils.VectorUtils;
 
 /**
  *
@@ -15,82 +19,94 @@ import lv.edgarsgars.mathematics.Vector;
  */
 public class BackPropogation implements TrainingMethod {
 
-    public double learningRate = 0.5;
-    public double momentum = 0.2;
-    Matrix[] prevUpdate;
+    public double learningRate = 0.2;
+    public double momentum = 0.5;
+    public Matrix[] prevUpdate = null;
+
+    public CustomFunction sigmoid = new CustomFunction() {
+        @Override
+        public double functionOf(double val) {
+            return 1.0f / (1.0f + Math.exp(-val));
+        }
+    };
+
+    public CustomFunction dsigmoid = new CustomFunction() {
+        @Override
+        public double functionOf(double val) {
+            return sigmoid.functionOf(val) * (1 - sigmoid.functionOf(val));
+        }
+
+    };
 
     @Override
     public double train(NeuralNetwork net, Matrix data, Matrix classes) {
-        double error = 0;
+        init(net);
+        data = MatrixUtils.getOnes(data.getRowCount(), 1).hcat(data);
+        for (int i = 0; i < 100000; i++) {
+            int index = (int) (Math.random() * data.getRowCount());
+            Matrix set = data.getRow(index);
+            Matrix exp = classes.getRow(index);
+            Matrix[] a = net.getNeurons();
+            Matrix[] w = net.getWeights();
+            
+            a[0] = set;
+            for (int l = 0; l < net.getWeights().length; l++) {
+                Matrix dotv = a[l].dot(w[l]);
+                Matrix act = sigmoid(dotv);
+                a[l + 1] = act;
+            }
 
+            Matrix error = exp.add(a[a.length - 1].scalar(-1));
+            List<Matrix> deltas = new ArrayList<Matrix>();
+            deltas.add(dsigmoid(a[a.length - 1]).scalar(error));
+            System.out.println("Error " + error);
+
+            for (int l = a.length - 2; l > 0; l--) {
+
+                Matrix dl = deltas.get(deltas.size() - 1);
+                Matrix wl = w[l];
+                Matrix wlt = wl.transponse();
+                Matrix al = a[l];
+                Matrix dal = dsigmoid(al);
+                Matrix dot = dl.dot(wlt);
+                Matrix sc = dot.scalar(dal);
+                deltas.add(sc);
+
+            }
+
+            List<Matrix> rdeltas = new ArrayList<Matrix>();
+            for (int l = deltas.size()-1; l >= 0; l--) {
+                rdeltas.add(deltas.get(l));
+            }
+            
+            for (int l =0;l<rdeltas.size();l++){
+                Matrix layer = a[l];
+                Matrix delta = rdeltas.get(l);
+                w[l] = w[l].add(layer.transponse().dot(delta).scalar(learningRate));
+            }
+            net.setWeights(w);
+        }
+
+        return 0;
+    }
+
+    public Matrix sigmoid(Matrix m) {
+        return MathUtils.applyFunction(m, sigmoid);
+    }
+
+    public Matrix dsigmoid(Matrix m) {
+        return MathUtils.applyFunction(m, dsigmoid);
+    }
+
+    public void init(NeuralNetwork net) {
         if (prevUpdate == null) {
-            prevUpdate = new Matrix[net.getWeights().length];
+            Matrix[] w = net.getWeights();
+            prevUpdate = new Matrix[w.length];
             for (int i = 0; i < prevUpdate.length; i++) {
-                prevUpdate[i] = new Matrix(net.getWeights()[i].getRowCount(), net.getWeights()[i].getCollumCount());
+                prevUpdate[i] = new Matrix(w[i].getRowCount(), w[i].getCollumCount());
             }
         }
 
-        for (int i = 0; i < data.getRowCount(); i++) {
-            Vector x = data.getRow(i);
-            Vector y = classes.getRow(i);
-
-            Vector y1 = net.predict(x);
-
-            Vector[] neurons = net.getNeurons();
-            Matrix[] weights = net.getWeights();
-
-            Vector[] errors = new Vector[net.getNeurons().length];
-            for (int e = 0; e < errors.length; e++) {
-                errors[e] = new Vector(net.getNeurons()[e].size());
-            }
-            Matrix[] newWeights = new Matrix[net.getWeights().length];
-            for (int w = 0; w < newWeights.length; w++) {
-                newWeights[w] = new Matrix(net.getWeights()[w].getRowCount(), net.getWeights()[w].getCollumCount());
-            }
-            //TODO init this shit
-            error = 0;
-            //delta for output layer
-            for (int j = 0; j < y.size(); j++) {
-                error += 0.5f * Math.pow(Math.abs(y1.get(j) - y.get(j)), 2);
-                errors[errors.length - 1].set(j, Statistics.dsigmoid(neurons[neurons.length - 1].get(j)) * (y1.get(j) - y.get(j)));
-            }
-            //System.out.println("Error " + error);
-            // Delta for hidden
-            for (int layer = neurons.length - 2; layer > 0; layer--) {
-                Vector A = neurons[layer];
-                Vector B = neurons[layer + 1];
-                Matrix W = weights[layer];
-                for (int a = 0; a < A.size(); a++) {
-                    for (int b = 0; b < B.size(); b++) {
-                        errors[layer].set(a, errors[layer].get(a) + errors[layer + 1].get(b) * W.get(a, b));
-                    }
-                    errors[layer].set(a, errors[layer].get(a) * Statistics.dsigmoid(A.get(a)));
-                }
-            }
-
-            //weights
-            for (int layer = 1; layer < neurons.length; layer++) {
-                Vector B = neurons[layer];
-
-                for (int b = 0; b < B.size(); b++) {
-                    Vector A = neurons[layer - 1];
-                    for (int a = 0; a < A.size(); a++) {
-                        if (layer == 1) {
-                            newWeights[layer - 1].set(a, b, neurons[layer - 1].get(a) * errors[layer].get(b));
-                        } else {
-                            newWeights[layer - 1].set(a, b, Statistics.sigmoid(neurons[layer - 1].get(a)) * errors[layer].get(b));
-                        }
-                        prevUpdate[layer - 1].set(a, b, learningRate * newWeights[layer - 1].get(a, b) + momentum * prevUpdate[layer - 1].get(a, b));
-                        net.getWeights()[layer - 1].set(a, b, newWeights[layer - 1].get(a, b) + prevUpdate[layer - 1].get(a, b));
-                    }
-                }
-
-            }
-            net.setWeights(newWeights);
-
-        }
-
-        return error;
     }
 
 }

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import lv.edgarsgars.geneticalgorithm.GA.TARGET;
 import lv.edgarsgars.geneticalgorithm.commongenes.DoubleGene;
 import lv.edgarsgars.mathematics.Matrix;
-import lv.edgarsgars.mathematics.Vector;
 
 /**
  *
@@ -43,8 +42,8 @@ public class GALinearSystemSolvinExample {
                 double x1 = genes.get(0).getValue();
                 double x2 = genes.get(1).getValue();
                 Matrix A = new Matrix(new double[][]{{1, 1}, {-1, 2}, {2, 1}});
-                Matrix b = new Vector(2, 2, 3).transponse();
-                Matrix x = new Vector(x1, x2).transponse();
+                Matrix b = new Matrix("[2;2;3]");
+                Matrix x = new Matrix("["+x1+";"+x2+"]");
 
                 Matrix Ax = A.dot(x);
                 double dist = Math.sqrt(Math.pow(Ax.get(0, 0) - b.get(0, 0), 2) + Math.pow(Ax.get(1, 0) - b.get(1, 0), 2));
@@ -71,8 +70,8 @@ public class GALinearSystemSolvinExample {
         double x1 = genes.get(0).getValue();
         double x2 = genes.get(1).getValue();
         Matrix A = new Matrix(new double[][]{{1, 1}, {-1, 2}, {2, 1}});
-        Matrix b = new Vector(2, 2, 3).transponse();
-        Matrix x = new Vector(x1, x2).transponse();
+        Matrix b = new Matrix("[2;2;3]");
+        Matrix x = new Matrix("["+x1+";"+x2+"]");
 
         Matrix Ax = A.dot(x);
         double dist = Math.sqrt(Math.pow(Ax.get(0, 0) - b.get(0, 0), 2) + Math.pow(Ax.get(1, 0) - b.get(1, 0), 2));

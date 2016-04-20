@@ -6,7 +6,6 @@
 package lv.edgarsgars.neuralnetwork;
 
 import lv.edgarsgars.mathematics.Matrix;
-import lv.edgarsgars.mathematics.Vector;
 
 /**
  *
@@ -14,20 +13,23 @@ import lv.edgarsgars.mathematics.Vector;
  */
 public interface NeuralNetwork {
 
-    public Vector getOutput();
+    public Matrix getOutput();
 
-    public void setInput(Vector vector);
+    public Matrix getInput();
 
-    public Vector predict(Vector data);
+    public void setInput(Matrix vector);
+
+    public Matrix predict(Matrix data);
+
 
     public double train(Matrix data, Matrix classes, TrainingMethod trainMethod);
 
     public Matrix[] getWeights();
 
-    public Vector[] getNeurons();
+    public Matrix[] getNeurons();
 
-    public Vector getNeuronCounts();
-    
+    public Matrix getNeuronCounts();
+
     public void setWeights(Matrix[] weights);
 
 }
