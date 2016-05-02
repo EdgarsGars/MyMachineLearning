@@ -6,17 +6,9 @@
 package lv.edgarsgars.utils;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import lv.edgarsgars.mathematics.MathUtils;
 import lv.edgarsgars.mathematics.Matrix;
 
 /**
@@ -73,12 +65,12 @@ public class MatrixUtils {
     }
 
     public static Matrix hreverse(Matrix m) {
-        Matrix[] r = m.transponse().getRows();
+        Matrix[] r = m.T().getRows();
         Matrix[] n = new Matrix[r.length];
         for (int i = 0; i < r.length; i++) {
             n[i] = r[r.length - 1 - i];
         }
-        return new Matrix(n).transponse();
+        return new Matrix(n).T();
     }
 
     public static Matrix hshift(Matrix m, int amount) {
@@ -256,15 +248,17 @@ public class MatrixUtils {
         for (Double v : uniques) {
             values.add(v);
         }
-        return new Matrix(values);
+        return mergeSort(new Matrix(values))[0];
     }
 
     public static Matrix confusionMatrix(Matrix y, Matrix expected) {
-        Matrix uniques = sort(unique(y), "asc")[0];
+        Matrix uniques = sort(unique(expected), "asc")[0];
+        // System.out.println(uniques + "->");
         Matrix conf = new Matrix(uniques.getCollumCount(), uniques.getCollumCount());
         for (int i = 0; i < y.getRowCount(); i++) {
             int y1 = uniques.indexOf(0, y.get(i, 0));
             int y2 = uniques.indexOf(0, expected.get(i, 0));
+            
             conf.set(conf.get(y1, y2) + 1, y1, y2);
         }
         return conf;
@@ -274,11 +268,11 @@ public class MatrixUtils {
         Matrix normalized = new Matrix(x.getRowCount(), x.getCollumCount());
 
         for (int i = 0; i < x.getCollumCount(); i++) {
-            Matrix col = x.getCol(i).transponse();
+            Matrix col = x.getCol(i).T();
             double mean = mean(col);
             double std = std(col);
             for (int j = 0; j < x.getRowCount(); j++) {
-                normalized.set((x.get(j, i) - mean) / std, j, i);
+                normalized.set((x.get(j, i) - mean) / (std + Double.MIN_VALUE), j, i);
             }
         }
         return normalized;
@@ -288,7 +282,7 @@ public class MatrixUtils {
         Matrix normalized = new Matrix(x.getRowCount(), x.getCollumCount());
 
         for (int i = 0; i < x.getCollumCount(); i++) {
-            Matrix[] col = mergeSort(x.getCol(i).transponse());
+            Matrix[] col = mergeSort(x.getCol(i).T());
             double max = col[0].get(0, col[0].getCollumCount() - 1);
 
             for (int j = 0; j < x.getRowCount(); j++) {
@@ -328,19 +322,42 @@ public class MatrixUtils {
     }
 
     public static Matrix[] splitData(Matrix x, Matrix c, double trainPercentage) {
-        int r = x.getRowCount();
-        int trainSamples = (int) (r * trainPercentage);
-        Matrix trainData = x.copy();
-        Matrix trainClasses = c.copy();
-        Matrix testData = new Matrix(r - trainSamples, x.getCollumCount());
-        Matrix testClasses = new Matrix(r - trainSamples, 1);
+        Matrix uniqueClasses = unique(c);
+        Matrix[] dataPerClass = new Matrix[uniqueClasses.getCollumCount()];
 
-        for (int i = 0; i < r - trainSamples; i++) {
-            int idx = (int) (Math.random() * trainData.getRowCount());
-            testData.setRow(i, x.getRow(idx));
-            testClasses.setRow(i, c.getRow(idx));
-            trainData.removeRow(idx);
-            trainClasses.removeRow(idx);
+        for (int i = 0; i < dataPerClass.length; i++) {
+            dataPerClass[i] = new Matrix(0, x.getCollumCount());
+        }
+
+        for (int j = 0; j < x.getRowCount(); j++) {
+            int cl = (int) c.get(j, 0);
+            dataPerClass[cl] = dataPerClass[cl].vcat(x.getRow(j));
+        }
+
+        int sampleSize = x.getRowCount();
+        int trainSamples = (int) (sampleSize * trainPercentage);
+        Matrix trainData = new Matrix(trainSamples, x.getCollumCount());
+        Matrix trainClasses = new Matrix(trainSamples, 1);
+        Matrix testData = new Matrix(0, x.getCollumCount());
+        Matrix testClasses = new Matrix(0, 1);
+
+        int traini = 0;
+        int testi = 0;
+        for (int cl = 0; cl < dataPerClass.length; cl++) {
+            int samplesFromClass = (int) (dataPerClass[cl].getRowCount() * trainPercentage);
+            int testFromClass = dataPerClass[cl].getRowCount() - samplesFromClass;
+            for (int i = 0; i < samplesFromClass; i++) {
+                int idx = (int) (Math.random() * dataPerClass[cl].getRowCount());
+                trainData.setRow(traini, dataPerClass[cl].getRow(idx));
+                dataPerClass[cl].removeRow(idx);
+                trainClasses.set(cl, traini++, 0);
+            }
+
+            for (int i = 0; i < dataPerClass[cl].getRowCount(); i++) {
+                testData = testData.vcat(dataPerClass[cl].getRow(i));
+                testClasses = testClasses.vcat(new Matrix("[" + cl + ";]"));
+            }
+
         }
         return new Matrix[]{trainData, trainClasses, testData, testClasses};
 
@@ -376,7 +393,14 @@ public class MatrixUtils {
 
     }
 
-    //http://sebastianraschka.com/Articles/2014_pca_step_by_step.html#eig_vec
+    public static double corr(Matrix x, Matrix y) {
+        double covariation = cov(x, y);
+        double sigma1 = var(x);
+        double sigma2 = var(y);
+        return covariation / (sigma1 * sigma2);
+    }
+
+    //http://www.cmi.ac.in/~ksutar/NLA2013/iterativemethods.pdf
     public static Matrix[] eig(Matrix a) {
         int n = a.getRowCount();
         double theta = 0;
@@ -386,7 +410,7 @@ public class MatrixUtils {
         do {
             flag = false;
             /* Max off dioganal */
-            int i = 1, j = 2;
+            int i = 0, j = 0;
             double max = Math.abs(D.get(i, j));
             for (int p = 0; p < n; p++) {
                 for (int q = 0; q < n; q++) {
@@ -405,7 +429,7 @@ public class MatrixUtils {
                     theta = -(Math.PI / 4.0);
                 }
             } else {
-                theta = 0.5 * Math.atan(2.0 * D.get(i, j) / (D.get(i, i) - D.get(j, j)));
+                theta = 0.5 * Math.atan((2.0 * D.get(i, j)) / (D.get(i, i) - D.get(j, j)));
             }
             //
             Matrix sl = MatrixUtils.getIdentical(n);
@@ -414,7 +438,7 @@ public class MatrixUtils {
             sl.set(Math.sin(theta), j, i);
             sl.set(-sl.get(j, i), i, j);
 
-            Matrix slt = sl.transponse();
+            Matrix slt = sl.T();
             D = slt.dot(D).dot(sl);
             S = S.dot(sl);
 
@@ -425,7 +449,6 @@ public class MatrixUtils {
                     }
                 }
             }
-
         } while (flag);
         return new Matrix[]{S, D};
     }
@@ -469,7 +492,7 @@ public class MatrixUtils {
         return det;
     }
 
-    public static Matrix trace(Matrix x) {
+    public static Matrix diag(Matrix x) {
         Matrix diag = new Matrix(1, x.getCollumCount());
         for (int i = 0; i < x.getCollumCount(); i++) {
             diag.set(x.get(i, i), 0, i);
@@ -477,22 +500,28 @@ public class MatrixUtils {
         return diag;
     }
 
+    //http://sebastianraschka.com/Articles/2014_pca_step_by_step.html#eig_vec
     public static Matrix pca(Matrix x, int eigenValues) {
         Matrix cov = cov(x);
         Matrix[] eig = eig(cov);
-        Matrix[] sorted_eigvalues = mergeSort(trace(eig[1]));
+        Matrix[] sorted_eigvalues = mergeSort(diag(eig[1]));
         sorted_eigvalues[0] = hreverse(sorted_eigvalues[0]);
         sorted_eigvalues[1] = hreverse(sorted_eigvalues[1]);
+        //System.out.println("Sorted eig " + sorted_eigvalues[1]);
         Matrix w = new Matrix(cov.getRowCount(), eigenValues);
         for (int i = 0; i < eigenValues; i++) {
             int colIdx = (int) (sorted_eigvalues[1].get(0, i));
             w.setCol(i, eig[0].getCol(colIdx));
         }
 
-        Matrix y = w.transponse().dot(x);
-        System.out.println("W=" + w.toStringExcel());
+        Matrix y = w.T().dot(x);
+        //System.out.println("W=" + w.toStringExcel());
 
         return y;
     }
 
+    
+    
+    
+    
 }

@@ -65,7 +65,7 @@ public class BackPropogation implements TrainingMethod {
 
                 Matrix dl = deltas.get(deltas.size() - 1);
                 Matrix wl = w[l];
-                Matrix wlt = wl.transponse();
+                Matrix wlt = wl.T();
                 Matrix al = a[l];
                 Matrix dal = dsigmoid(al);
                 Matrix dot = dl.dot(wlt);
@@ -82,7 +82,7 @@ public class BackPropogation implements TrainingMethod {
             for (int l =0;l<rdeltas.size();l++){
                 Matrix layer = a[l];
                 Matrix delta = rdeltas.get(l);
-                w[l] = w[l].add(layer.transponse().dot(delta).scalar(learningRate));
+                w[l] = w[l].add(layer.T().dot(delta).scalar(learningRate));
             }
             net.setWeights(w);
         }

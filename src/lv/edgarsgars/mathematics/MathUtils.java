@@ -15,7 +15,7 @@ import lv.edgarsgars.utils.VectorUtils;
 public class MathUtils {
 
     public static Matrix applyFunction(Matrix x, CustomFunction fun) {
-        Matrix result = new Matrix(x.getRowCount(),x.getCollumCount());
+        Matrix result = new Matrix(x.getRowCount(), x.getCollumCount());
         for (int i = 0; i < result.getRowCount(); i++) {
             for (int j = 0; j < result.getCollumCount(); j++) {
                 result.set(fun.functionOf(x.get(i, j)), i, j);
@@ -25,7 +25,7 @@ public class MathUtils {
     }
 
     public static Matrix pow(Matrix m, double pow) {
-        Matrix result = new Matrix();
+        Matrix result = new Matrix(m.getRowCount(), m.getCollumCount());
         for (int i = 0; i < result.getRowCount(); i++) {
             for (int j = 0; j < result.getCollumCount(); j++) {
                 result.set(Math.pow(m.get(i, j), pow), i, j);

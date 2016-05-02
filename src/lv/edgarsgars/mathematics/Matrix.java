@@ -14,6 +14,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import lv.edgarsgars.classifiers.boosting.SimpleClassifier;
+import lv.edgarsgars.utils.MatrixUtils;
 import lv.edgarsgars.utils.VectorUtils;
 
 /**
@@ -74,6 +79,20 @@ public class Matrix implements Iterable<Matrix> {
         return matrix[r][k];
     }
 
+    public Matrix get(Matrix mask) {
+        int dim = (int) mask.sum();
+        Matrix res = new Matrix(1, dim);
+        int idx = 0;
+        for (int i = 0; i < getRowCount(); i++) {
+            for (int j = 0; j < getCollumCount(); j++) {
+                if (mask.get(i, j) == 1) {
+                    res.set(get(i, j), 0, idx++);
+                }
+            }
+        }
+        return res;
+    }
+
     public void set(double value, int r, int k) {
         matrix[r][k] = value;
     }
@@ -113,7 +132,7 @@ public class Matrix implements Iterable<Matrix> {
 
     public Matrix getCol(int index) {
         if (index < getCollumCount()) {
-            return transponse().getRow(index).transponse();
+            return T().getRow(index).T();
         } else {
             System.err.println("Index is out of range " + index + " column count = " + getCollumCount());
             return null;
@@ -213,7 +232,7 @@ public class Matrix implements Iterable<Matrix> {
         return s;
     }
 
-    public Matrix transponse() {
+    public Matrix T() {
         Matrix temp = new Matrix(getCollumCount(), getRowCount());
         for (int i = 0; i < getRowCount(); i++) {
             for (int j = 0; j < getCollumCount(); j++) {
@@ -241,6 +260,10 @@ public class Matrix implements Iterable<Matrix> {
             }
         }
         return d;
+    }
+
+    public void addTo(double value, int r, int k) {
+        matrix[r][k] += value;
     }
 
     public Matrix sub(double value) {
@@ -323,12 +346,12 @@ public class Matrix implements Iterable<Matrix> {
 
     public Matrix hcat(Matrix m) {
         Matrix rez = copy();
-        return rez.transponse().vcat(m.transponse()).transponse();
+        return rez.T().vcat(m.T()).T();
 
     }
 
     public Matrix hcat(double... m) {
-        return hcat(new Matrix(m).transponse());
+        return hcat(new Matrix(m).T());
     }
 
     public Matrix reshape(int n, int m) {
@@ -406,6 +429,102 @@ public class Matrix implements Iterable<Matrix> {
             }
         }
         return -1;
+    }
+
+    public boolean equals(Matrix m) {
+        boolean equal = true;
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[0].length; j++) {
+                if (matrix[i][j] != m.matrix[i][j]) {
+                    return false;
+                }
+            }
+        }
+        return equal;
+    }
+
+    public Matrix conditon(String condition) {
+        ScriptEngine se = new ScriptEngineManager().getEngineByName("JavaScript");
+        Matrix y = new Matrix(getRowCount(), getCollumCount());
+        try {
+            for (int i = 0; i < getRowCount(); i++) {
+                for (int j = 0; j < getCollumCount(); j++) {
+                    String myExpression = condition.replaceAll("x", "" + get(i, j));
+                    y.set(se.eval(myExpression).toString().equals("true") ? 1.0 : 0.0, i, j);
+                }
+            }
+        } catch (ScriptException ex) {
+            Logger.getLogger(SimpleClassifier.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return y;
+    }
+
+    public Matrix conditon(String condition, Matrix b) {
+        ScriptEngine se = new ScriptEngineManager().getEngineByName("JavaScript");
+        Matrix y = new Matrix(getRowCount(), getCollumCount());
+        try {
+            for (int i = 0; i < getRowCount(); i++) {
+                for (int j = 0; j < getCollumCount(); j++) {
+                    String myExpression = condition.replaceAll("x", "" + get(i, j)).replaceAll("y", "" + b.get(i, j));
+                    y.set(se.eval(myExpression).toString().equals("true") ? 1.0 : 0.0, i, j);
+                }
+            }
+        } catch (ScriptException ex) {
+            Logger.getLogger(SimpleClassifier.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return y;
+    }
+
+    public double sum() {
+        return sum(0).sum(1).get(0, 0);
+    }
+
+    public Matrix sum(int dim) {
+        Matrix res = null;
+        if (dim == 0) {
+            res = new Matrix(1, getCollumCount());
+            for (int i = 0; i < getRowCount(); i++) {
+                for (int j = 0; j < getCollumCount(); j++) {
+                    res.addTo(get(i, j), 0, j);
+                }
+            }
+        } else if (dim == 1) {
+            res = new Matrix(getRowCount(), 1);
+            for (int i = 0; i < getRowCount(); i++) {
+                for (int j = 0; j < getCollumCount(); j++) {
+                    res.addTo(get(i, j), i, 0);
+                }
+            }
+        }
+        return res;
+    }
+
+    public double max() {
+        double max = get(0, 0);
+        for (int i = 0; i < getRowCount(); i++) {
+            for (int j = 0; j < getCollumCount(); j++) {
+                if (max < get(i, j)) {
+                    max = get(i, j);
+                }
+            }
+        }
+        return max;
+    }
+
+    public double min() {
+        return MatrixUtils.mergeSort(this)[0].get(0, 0);
+    }
+
+    public double mean() {
+        double mean = 0;
+        for (int i = 0; i < getRowCount(); i++) {
+            for (int j = 0; j < getCollumCount(); j++) {
+
+                mean += get(i, j);
+
+            }
+        }
+        return mean / (size()[0] * size()[1]);
     }
 
 }

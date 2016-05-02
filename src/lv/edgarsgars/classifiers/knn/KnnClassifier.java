@@ -36,21 +36,19 @@ public class KnnClassifier {
 
     public Matrix predict(Matrix x, int k) {
         Matrix y = new Matrix(x.getRowCount(), 1);
-
         for (int j = 0; j < x.getRowCount(); j++) {
-            Matrix d = MatrixUtils.distances(x.getRow(j), points, "euclid");
+            Matrix d = MatrixUtils.distances(x.getRow(j), points, "manhatan");
             Matrix[] r = MatrixUtils.mergeSort(d);
             int[] nn = new int[classes.size()];
             int maxClass = 0;
-            for (int i = 1; i <= Math.min(k, r.length); i++) {
+            for (int i = 0; i < Math.min(k, r[0].getCollumCount()); i++) {
                 int idx = (int) ((r[1].get(0, i)));
                 double ci = pointClasses.get(idx, 0);
-                nn[(int) ci]++;
-                if (nn[maxClass] < nn[(int) ci]) {
+                if (nn[maxClass] < ++nn[(int) ci]) {
                     maxClass = (int) ci;
                 }
             }
-
+            //System.out.println(nn[0] + " " + nn[1] + " " + nn[2]);
             int maxN = 0;
             for (int i = 0; i < nn.length; i++) {
                 if (nn[i] == nn[maxClass]) {
@@ -58,17 +56,7 @@ public class KnnClassifier {
                 }
             }
             if (maxN > 1) {
-                /*
-                for (int i = 1; i < r[1].getCollumCount()+1; i++) {
-                    int idx = (int) ((r[1].get(0, i)));
-                    double ci = pointClasses.get(idx, 0);
-                    if (nn[(int) ci] == nn[maxClass]) {
-                        maxClass = (int) ci;
-                        break;
-                    }
-
-                }
-                */  maxClass = (int) (predict(x.getRow(j), k - 1).get(0, 0));
+                maxClass = (int) (predict(x.getRow(j), k - 1).get(0, 0));
             }
             y.set(maxClass, j, 0);
 
