@@ -14,14 +14,14 @@ import lv.edgarsgars.mathematics.Matrix;
  * @author Edgar_000
  */
 public class CnnClassifier extends KnnClassifier {
-    
+
     private Matrix originalPoints;
     private Matrix originalClasses;
     private ArrayList<Integer> outliers = new ArrayList<Integer>();
-    
-    public CnnClassifier(int k, int dim) {
-        super(dim);
-        
+
+    public CnnClassifier(int k) {
+        super();
+
     }
 
     /*
@@ -94,7 +94,7 @@ public class CnnClassifier extends KnnClassifier {
             }
         }
         k = 1;
-        
+
         boolean newPrototypes = true;
         boolean[] b = new boolean[pointsAfterOutliers.getRowCount()];
         int index = (int) (Math.random() * pointsAfterOutliers.getRowCount());
@@ -115,24 +115,24 @@ public class CnnClassifier extends KnnClassifier {
                 }
             }
         }
-        
+
         System.out.println("Reduced from " + originalPoints.getRowCount() + " to " + points.getRowCount() + " points");
-        
+
         System.out.println("samples = " + points);
         System.out.println("samplesC = " + pointClasses.toString());
     }
-    
+
     public void train(Matrix x, Matrix y) {
         super.train(x, y);
         originalPoints = points.copy();
         originalClasses = y.copy();
         reducePoints();
     }
-    
+
     public Matrix predict(Matrix x) {
         return super.predict(x, 1);
     }
-    
+
     @Deprecated
     public Matrix predict(Matrix x, int k) {
         return super.predict(x, 1);

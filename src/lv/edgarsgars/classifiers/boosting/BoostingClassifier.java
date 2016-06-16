@@ -1,184 +1,170 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package lv.edgarsgars.classifiers.boosting;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import static lv.edgarsgars.classifiers.Assigment1.parseInput;
+import java.util.List;
 import lv.edgarsgars.mathematics.Matrix;
 import lv.edgarsgars.utils.MatrixUtils;
-import lv.edgarsgars.vizualization.Visual;
 
 /**
+ * Boosting classifier implementation
  *
- * @author Edgar_000
+ * @author edgars.garsneks
  */
 public class BoostingClassifier {
 
-    private ArrayList<SimpleClassifier> classifiers = new ArrayList<SimpleClassifier>();
-    private ArrayList<SimpleClassifier> trainedClassfiers = new ArrayList<SimpleClassifier>();
+    private List<SimpleClassifier> classifiers = new ArrayList<SimpleClassifier>();
+    private List<SimpleClassifier> trainedClassfiers = new ArrayList<SimpleClassifier>();
     private HashSet<Integer> uniqueClasses = new HashSet<Integer>();
-
     private Matrix weights;
 
+    /**
+     * Creates empty boosting classifier
+     */
     public BoostingClassifier() {
 
     }
 
-    public BoostingClassifier(ArrayList<SimpleClassifier> classifiers) {
+    /**
+     * Creates boosting classifier from given simple classifiers
+     *
+     * @param classifiers list of simple classifiers
+     */
+    public BoostingClassifier(List<SimpleClassifier> classifiers) {
         this.classifiers = classifiers;
     }
 
+    /**
+     * Trains boosting classifier with training data. Example : X = [1 2 3; 4 5
+     * 6; 3 6 7; 3 6 7]; Y = [1;2;0;0];
+     *
+     * @param trainData matrix with training data. Row corresponds to one point
+     * @param trainClasses column vector with corresponding classes for training
+     * data points
+     */
     public void train(Matrix trainData, Matrix trainClasses) {
-        weights = MatrixUtils.getOnes(trainData.getRowCount(), 1).scalar(1.0 / trainData.getRowCount());
+        trainedClassfiers.clear();
+        uniqueClasses.clear();
+        // intializes weights with error 1/totalPointNumber
+        weights = MatrixUtils.ones(trainData.getRowCount(), 1).scalar(1.0 / trainData.getRowCount());
+        //Do while all alpha coefficients for classifiers are not calcullated 
         while (!classifiers.isEmpty()) {
-
+            //Initialize all classifiers with errors 0
             for (SimpleClassifier cl : classifiers) {
                 cl.setError(0);
             }
-
+            //For each classifier calculate error
             for (SimpleClassifier classifier : classifiers) {
                 int classifierClass = classifier.getClassIndex();
                 uniqueClasses.add(classifierClass);
+                //Evaluates train data against classifiers
                 Matrix yh = classifier.evaluate(trainData);
+                //Gets logical matrix where train classes matches classifier class
                 Matrix expected = trainClasses.conditon(" x == " + classifierClass);
+                //Finds where expected classes dosn't match with classified
                 Matrix wrongclasses = yh.conditon("x != y", expected);
+                //Gets error count and multiplies by weights
                 double error = weights.scalar(wrongclasses).sum();
                 classifier.setError(classifier.getError() + error);
             }
 
+            //Finds best classifier in this iteration
             SimpleClassifier best = classifiers.get(0);
             for (int i = 1; i < classifiers.size(); i++) {
                 if (best.getError() > classifiers.get(i).getError()) {
                     best = classifiers.get(i);
                 }
             }
-
-            double aplha = 0.5 * Math.log((1.0 - best.getError()) / (best.getError() + Double.MIN_VALUE));
-            // System.out.println(Math.log((1.0 - best.getError()) / (best.getError() + Double.MIN_VALUE)));
+            //Assigns alpha for best classifier
+            double aplha = 0.5 * Math.log((1.0 - best.getError()) / (best.getError() + 0.00001));
             best.setAlpha(aplha);
+            //Adds classifier for checked list
             trainedClassfiers.add(best);
             classifiers.remove(best);
-
+            //Calculates error once again -_-
             Matrix yh = best.evaluate(trainData);
             Matrix expected = trainClasses.conditon(" x == " + (int) best.getClassIndex());
+            // 0 1 0 1 1 1 1 0 1 
+            // 1 1 0 0 0 1 1 1 1
+            //-------------------
+            // 1 0 0 1 1 0 0 1 0
             Matrix wrongclasses = yh.conditon("x != y", expected);
+            // Adjust point weights
             for (int i = 0; i < wrongclasses.getRowCount(); i++) {
                 if (wrongclasses.get(i, 0) == 0.0d) {
-                    weights.set(0.5 * weights.get(i, 0) / (1.0 - best.getError() + Double.MIN_VALUE), i, 0);
+                    weights.set(0.5 * weights.get(i, 0) / (1.0 - best.getError() + 0.0001), i, 0);
                 } else {
-                    weights.set(0.5 * weights.get(i, 0) / (best.getError() + Double.MIN_VALUE), i, 0);
+                    weights.set(0.5 * weights.get(i, 0) / (best.getError() + 0.0001), i, 0);
                 }
             }
         }
-        System.out.println(weights);
-        System.out.println(trainedClassfiers);
-        //System.out.println(trainedClassfiers);
+
     }
 
+    /**
+     * Adds simple classifier to classifier list
+     *
+     * @param cl
+     */
     public void addSimpleClassifier(SimpleClassifier cl) {
         classifiers.add(cl);
     }
 
-    public Matrix classify(Matrix x) {
+    /**
+     * Adds simple classifier with specific condition on specific dimension for
+     * specific class. Example new Classifier("x > 3 && x < 5", 2, 3) @pa
+     *
+     *
+     * ram condition condition to evaluate. Must be valid boolean expression
+     * with x as variable. @param dim dimension which will be used for
+     * evaluation @param cl target class
+     */
+    public void addSimpleClassifier(String condition, int dim, int cl) {
+        classifiers.add(new SimpleClassifier(condition, dim, cl));
+    }
+
+    /**
+     * Classifies matrix with rows representing points only by those classifiers
+     * with error rate below specified
+     *
+     * @param x data matrix
+     * @param errorRate allowed maximum error rate for classifiers
+     * @return column matrix with assigned classes and matrix with votes
+     */
+    public Matrix[] classify(Matrix x, double errorRate) {
         Matrix y = new Matrix(x.getRowCount(), 1);
         Matrix votes = new Matrix(x.getRowCount(), uniqueClasses.size());
-        // System.out.println("Classes " + uniqueClasses.size());
-        //System.out.println(votes);
-        //System.out.println(uniqueClasses.size());
+        votes.add(0.0000001);
+        //For each point all classifiers vote to which class it belongs
         for (SimpleClassifier classifier : trainedClassfiers) {
-            Matrix pred = classifier.evaluate(x);
-            for (int i = 0; i < pred.getRowCount(); i++) {
-                if (pred.get(i, 0) == 1.0d && classifier.getError() <= 0.7) {
-                    votes.addTo(classifier.getError() * classifier.getAlpha(), i, classifier.getClassIndex());
+            if (classifier.getError() <= errorRate) {
+                Matrix pred = classifier.evaluate(x);
+                for (int i = 0; i < pred.getRowCount(); i++) {
+                    if (pred.get(i, 0) == 1.0d) {
+                        votes.addTo(classifier.getError() * classifier.getAlpha(), i, classifier.getClassIndex());
+                    }
                 }
             }
         }
-
+        //Finds maximum vote and assigns that class
         for (int i = 0; i < y.getRowCount(); i++) {
+
             Matrix summary = votes.getRow(i);
             double max = summary.max();
-            int index = votes.getRow(i).indexOf(0, max);
+            int index = votes.indexOf(i, max);
             y.set(index, i, 0);
         }
 
-        System.out.println("Votes = \n" + votes.toStringExcel());
-        return y;
+        return new Matrix[]{y, votes};
     }
 
-    public static void main(String[] args) {
-        Matrix x = new Matrix("[1 6;2 1; 5 4; 7 5;9 1;10 2;5 1;1 5;4 0; 5 -3]");
-        Matrix c = new Matrix("[0;0;1;1;0;0;1;0;2;2]");
-        BoostingClassifier boost = new BoostingClassifier();
-
-        /*
-        boost.addSimpleClassifier(new SimpleClassifier(" x <= 3", 0, 0));
-        boost.addSimpleClassifier(new SimpleClassifier(" x >= 8", 0, 0));
-        boost.addSimpleClassifier(new SimpleClassifier(" x <= 3", 1, 0));
-        boost.addSimpleClassifier(new SimpleClassifier(" x >= 0", 1, 0));
-        boost.addSimpleClassifier(new SimpleClassifier(" x >= 3", 1, 0));
-
-        boost.addSimpleClassifier(new SimpleClassifier(" x > 3", 0, 1));
-        boost.addSimpleClassifier(new SimpleClassifier(" x < 8", 0, 1));
-        boost.addSimpleClassifier(new SimpleClassifier(" x > 3", 1, 1));
-        boost.addSimpleClassifier(new SimpleClassifier(" x < 0", 1, 1));
-        boost.addSimpleClassifier(new SimpleClassifier(" x < 3", 1, 1));
-
-        boost.addSimpleClassifier(new SimpleClassifier(" x < 8 && x > 3", 0, 2));
-        boost.addSimpleClassifier(new SimpleClassifier(" x > -2 && x < 1", 1, 2));
-        boost.addSimpleClassifier(new SimpleClassifier(" x > 7", 0, 2));
-        System.out.println(x);
-        for (int i = 0; i < x.getCollumCount(); i++) {
-            System.out.println(x.getCol(i));
-            Matrix dim = x.getCol(i);
-            for (int j = 0; j < MatrixUtils.unique(c).size()[0]; j++) {
-                Matrix members = dim.get(c.conditon("x == " + j));
-                double mean = members.mean();
-                double max = members.max();
-                double min = members.min();
-                double std = MatrixUtils.std(members);
-                boost.addSimpleClassifier(new SimpleClassifier("x >= " + min, i, j));
-                boost.addSimpleClassifier(new SimpleClassifier("x <= " + max, i, j));
-                boost.addSimpleClassifier(new SimpleClassifier("x >= " + (mean - std) + " &&  x <=" + mean, i, j));
-                boost.addSimpleClassifier(new SimpleClassifier("x <= " + (mean + std) + " &&  x >=" + mean, i, j));
-                boost.addSimpleClassifier(new SimpleClassifier("x > " + mean, i, j));
-                boost.addSimpleClassifier(new SimpleClassifier("x < " + mean, i, j));
-                //boost.addSimpleClassifier(new SimpleClassifier("x <= " + max, i, j));
-            }
-
-        }*/
-        Matrix stundetMat = parseInput("C:\\Users\\Edgar_000\\Documents\\MATLAB\\student-mat.csv");
-        Matrix stundetPor = parseInput("C:\\Users\\Edgar_000\\Documents\\MATLAB\\student-por.csv");
-        //Matrix both = parseInput("C:\\Users\\Edgar_000\\Documents\\MATLAB\\both.csv");
-        Matrix data = stundetMat.vcat(stundetPor);
-        int classCollum = data.getCollumCount() - 1;
-        final Matrix classes = data.getCol(classCollum);
-        //System.out.println(MatrixUtils.cov(MatrixUtils.zscore(data).T()).toStringExcel());
-        data.removeCol(classCollum);
-
-        final Matrix normalizedData = MatrixUtils.zscore(data);
-        Matrix pcaData = MatrixUtils.pca(normalizedData.T(), 4).T();
-        Matrix[] trainTestData = MatrixUtils.splitData(pcaData, classes, 0.75);
-        System.out.println("Data prepared");
-        for (int i = 0; i < 120; i++) {
-            boost.addSimpleClassifier(new SimpleClassifier(" x > " + (Math.random() * 2 - 1), (int) (Math.random()) * normalizedData.getCollumCount(), (int) (Math.random() * 4)));
-            boost.addSimpleClassifier(new SimpleClassifier(" x <= " + (Math.random() * 2 - 1), (int) (Math.random()) * normalizedData.getCollumCount(), (int) (Math.random() * 4)));
-
-        }
-        System.out.println("Classifiers created");
-        boost.train(trainTestData[0], trainTestData[1]);
-        System.out.println("Training ended");
-        Matrix y = boost.classify(trainTestData[2]);
-
-        //System.out.println(trainTestData[3]);
-        //System.out.println(y);
-        Matrix conf = MatrixUtils.confusionMatrix(y, trainTestData[3]);
-        System.out.println(conf.toStringExcel());
-        Visual.showConfusionMatrix(conf);
-
+    /**
+     * Sets list of simple classifiers
+     *
+     * @param classifiers
+     */
+    public void setSimpleClassifiers(List<SimpleClassifier> classifiers) {
+        this.classifiers = classifiers;
     }
 
 }

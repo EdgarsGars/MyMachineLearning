@@ -9,6 +9,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashSet;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import lv.edgarsgars.mathematics.Matrix;
 
 /**
@@ -17,7 +19,9 @@ import lv.edgarsgars.mathematics.Matrix;
  */
 public class MatrixUtils {
 
-    public static Matrix getRandom(int n, int m) {
+    public static ScriptEngine se = new ScriptEngineManager().getEngineByName("JavaScript");
+
+    public static Matrix rand(int n, int m) {
         Matrix matrix = new Matrix(n, m);
         for (int i = 0; i < matrix.getRowCount(); i++) {
             for (int j = 0; j < matrix.getCollumCount(); j++) {
@@ -27,7 +31,7 @@ public class MatrixUtils {
         return matrix;
     }
 
-    public static Matrix getRandom(int n, int m, double min, double max) {
+    public static Matrix rand(int n, int m, double min, double max) {
         Matrix matrix = new Matrix(n, m);
         for (int i = 0; i < matrix.getRowCount(); i++) {
             for (int j = 0; j < matrix.getCollumCount(); j++) {
@@ -37,7 +41,7 @@ public class MatrixUtils {
         return matrix;
     }
 
-    public static Matrix getIdentical(int n) {
+    public static Matrix eye(int n) {
         Matrix matrix = new Matrix(n, n);
         for (int i = 0; i < matrix.getRowCount(); i++) {
             matrix.set(1, i, i);
@@ -45,7 +49,7 @@ public class MatrixUtils {
         return matrix;
     }
 
-    public static Matrix getOnes(int n, int m) {
+    public static Matrix ones(int n, int m) {
         Matrix matrix = new Matrix(n, m);
         for (int i = 0; i < matrix.getRowCount(); i++) {
             for (int j = 0; j < matrix.getCollumCount(); j++) {
@@ -251,14 +255,14 @@ public class MatrixUtils {
         return mergeSort(new Matrix(values))[0];
     }
 
-    public static Matrix confusionMatrix(Matrix y, Matrix expected) {
+    public static Matrix confusionMatrix(Matrix expected, Matrix y) {
         Matrix uniques = sort(unique(expected), "asc")[0];
         // System.out.println(uniques + "->");
         Matrix conf = new Matrix(uniques.getCollumCount(), uniques.getCollumCount());
         for (int i = 0; i < y.getRowCount(); i++) {
             int y1 = uniques.indexOf(0, y.get(i, 0));
             int y2 = uniques.indexOf(0, expected.get(i, 0));
-            
+
             conf.set(conf.get(y1, y2) + 1, y1, y2);
         }
         return conf;
@@ -284,6 +288,9 @@ public class MatrixUtils {
         for (int i = 0; i < x.getCollumCount(); i++) {
             Matrix[] col = mergeSort(x.getCol(i).T());
             double max = col[0].get(0, col[0].getCollumCount() - 1);
+            if (max == 0) {
+                max = Double.MIN_VALUE;
+            }
 
             for (int j = 0; j < x.getRowCount(); j++) {
                 normalized.set(x.get(j, i) / max, j, i);
@@ -405,7 +412,7 @@ public class MatrixUtils {
         int n = a.getRowCount();
         double theta = 0;
         Matrix D = a.copy();
-        Matrix S = MatrixUtils.getIdentical(n);
+        Matrix S = MatrixUtils.eye(n);
         boolean flag = false;
         do {
             flag = false;
@@ -432,7 +439,7 @@ public class MatrixUtils {
                 theta = 0.5 * Math.atan((2.0 * D.get(i, j)) / (D.get(i, i) - D.get(j, j)));
             }
             //
-            Matrix sl = MatrixUtils.getIdentical(n);
+            Matrix sl = MatrixUtils.eye(n);
             sl.set(Math.cos(theta), i, i);
             sl.set(sl.get(i, i), j, j);
             sl.set(Math.sin(theta), j, i);
@@ -501,7 +508,7 @@ public class MatrixUtils {
     }
 
     //http://sebastianraschka.com/Articles/2014_pca_step_by_step.html#eig_vec
-    public static Matrix pca(Matrix x, int eigenValues) {
+    public static Matrix[] pca(Matrix x, int eigenValues) {
         Matrix cov = cov(x);
         Matrix[] eig = eig(cov);
         Matrix[] sorted_eigvalues = mergeSort(diag(eig[1]));
@@ -517,11 +524,29 @@ public class MatrixUtils {
         Matrix y = w.T().dot(x);
         //System.out.println("W=" + w.toStringExcel());
 
-        return y;
+        return new Matrix[]{y, sorted_eigvalues[1].get("0:0", "0:" + eigenValues)};
     }
 
-    
-    
-    
+    public static Matrix and(Matrix a, Matrix b) {
+        if (!a.isLogical() || !b.isLogical()) {
+            System.err.println("Matrixes must be logical..");
+        }
+        return a.conditon("x == 1 && y == 1", b);
+    }
+
+    public static Matrix or(Matrix a, Matrix b) {
+        if (!a.isLogical() || !b.isLogical()) {
+            System.err.println("Matrixes must be logical..");
+        }
+        return a.conditon("x == 1 || y == 1", b);
+    }
+
+    public static Matrix xor(Matrix a, Matrix b) {
+        if (!a.isLogical() || !b.isLogical()) {
+            System.err.println("Matrixes must be logical..");
+        }
+        return a.conditon("x != y", b);
+    }
+
     
 }

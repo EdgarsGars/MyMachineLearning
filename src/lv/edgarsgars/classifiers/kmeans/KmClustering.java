@@ -5,20 +5,26 @@
  */
 package lv.edgarsgars.classifiers.kmeans;
 
-import lv.edgarsgars.mathematics.MathUtils;
 import lv.edgarsgars.mathematics.Matrix;
 import lv.edgarsgars.utils.MatrixUtils;
 
 /**
  *
- * @author Edgar_000
+ * @author edgars.garsneks
  */
 public class KmClustering {
 
-    public Matrix[] cluster(Matrix data, int clusterCount, int maxIterations) {
+    /**
+     *
+     * @param data
+     * @param clusterCount
+     * @param maxIterations
+     * @return
+     */
+    public static Matrix[] cluster(Matrix data, int clusterCount, int maxIterations) {
         int iterations = 0;
         Matrix labels = new Matrix(data.getRowCount(), 1);
-        Matrix centroids = MatrixUtils.getRandom(clusterCount, data.getCollumCount());
+        Matrix centroids = MatrixUtils.rand(clusterCount, data.getCollumCount());
         boolean isDone = false;
         while (!isDone && iterations < maxIterations) {
             iterations++;

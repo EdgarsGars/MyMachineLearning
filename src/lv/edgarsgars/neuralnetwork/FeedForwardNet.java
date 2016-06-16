@@ -5,132 +5,58 @@
  */
 package lv.edgarsgars.neuralnetwork;
 
-import lv.edgarsgars.mathematics.MathUtils;
 import lv.edgarsgars.mathematics.Matrix;
-import lv.edgarsgars.utils.CustomFunction;
 import lv.edgarsgars.utils.MatrixUtils;
-import lv.edgarsgars.utils.VectorUtils;
 
 /**
  *
- * @author Edgar_000
+ * @author edgars.garsneks
  */
-public class FeedForwardNet implements NeuralNetwork {
+public class FeedForwardNet {
 
-    private Matrix input;
-    private Matrix[] neurons;
     private Matrix[] weights;
-    private CustomFunction sigmoid = new CustomFunction() {
-        @Override
-        public double functionOf(double val) {
-            return 1.0 / (1.0 + Math.exp(-val));
-        }
-    };
+    private Matrix[] layers;
 
-    public FeedForwardNet(int[] sizes) {
-        neurons = new Matrix[sizes.length];
-        for (int i = 0; i < sizes.length - 1; i++) {
-            // System.out.println("Creating layer with size " + sizes[i]);
-            neurons[i] = new Matrix(sizes[i] + 1, 1);
-            //  System.out.println(neurons[i]);
-        }
-        neurons[neurons.length - 1] = new Matrix(sizes[sizes.length - 1], 1);
-        weights = new Matrix[sizes.length - 1];
+    public FeedForwardNet(int... structure) {
+        initializeNet(structure);
+    }
+
+    private void initializeNet(int... structure) {
+        layers = new Matrix[structure.length];
+        weights = new Matrix[structure.length - 1];
         for (int i = 0; i < weights.length; i++) {
-            //weights[i] = MatrixUtils.getRandom(neurons[i].size(), neurons[i + 1].size(), -1, 1);
-            weights[i] = MatrixUtils.getOnes(neurons[i].size(), neurons[i + 1].size()).scalar(0.5);
+            weights[i] = MatrixUtils.rand(structure[i], structure[i + 1], -1, 1);
+            //weights[i] = MatrixUtils.ones(structure[i], structure[i + 1]).scalar(0.5);
+            //System.out.println("i=" + i + " " + weights[i]);
         }
+        //weights[0] = new Matrix("[2 -1;-1 2]");
+        // weights[1] = new Matrix("[2 0; 0 2]");
+        //    }
+        System.out.println("Layers " + layers.length);
+        //}
     }
 
-    @Override
-    public Matrix getOutput() {
-        return MathUtils.applyFunction(neurons[neurons.length - 1], sigmoid);
-    }
-
-    public void feedForward() {
-
-        neurons[0] = input;
-        for (int l = 0; l < getWeights().length; l++) {
-            Matrix dotv = neurons[l].dot(weights[l]);
-            
-            System.out.println(dotv);
-            Matrix act = sigmoid(dotv);
-            neurons[l + 1] = act;
-        }
-    }
-
-    @Override
-    public double train(Matrix input, Matrix output, TrainingMethod trainMethod) {
-        return trainMethod.train(this, input, output);
-    }
-
-    @Override
     public Matrix[] getWeights() {
-        Matrix[] m = new Matrix[weights.length];
-        for (int i = 0; i < m.length; i++) {
-            m[i] = weights[i].copy();
-        }
-        return m;
+        return weights;
     }
 
-    @Override
-    public Matrix[] getNeurons() {
-        Matrix[] v = new Matrix[neurons.length];
-        for (int i = 0; i < v.length; i++) {
-            v[i] = neurons[i].copy();
-        }
-        return v;
-    }
-
-    @Override
-    public Matrix getNeuronCounts() {
-        Matrix sizes = new Matrix(1, neurons.length);
-        for (int i = 0; i < neurons.length; i++) {
-            sizes.set(neurons[i].size(), 0, i);
-        }
-        return sizes;
-    }
-
-    @Override
     public void setWeights(Matrix[] weights) {
         this.weights = weights;
     }
 
-    public String toString() {
-        String s = "";
-        for (int i = 0; i < neurons.length - 1; i++) {
-            s += "N" + i + " " + neurons[i] + "\n";
-            s += "W" + i + " " + weights[i] + "\n";
+    public Matrix feedforward(Matrix x) {
+
+        Matrix y = new Matrix(x.getRowCount(), weights[weights.length - 1].getCollumCount());
+
+        for (int r = 0; r < x.getRowCount(); r++) {
+            layers[0] = x.getRow(r);
+
+            for (int i = 0; i < layers.length - 1; i++) {
+                layers[i + 1] = ActivationFunctions.sigmoid(layers[i].dot(weights[i]));
+            }
+            y.setRow(r, layers[layers.length - 1]);
         }
-        s += "N" + (neurons.length - 1) + " " + neurons[neurons.length - 1] + "\n";
-        return s;
+        return y;
     }
 
-    @Override
-    public Matrix predict(Matrix data) {
-         data = MatrixUtils.getOnes(data.getRowCount(), 1).hcat(data);
-        Matrix[] y = new Matrix[data.getRowCount()];
-        Matrix[] dataRows = data.getRows();
-        for (int i = 0; i < dataRows.length; i++) {
-            y[i] = new Matrix(1, neurons[neurons.length - 1].getCollumCount());
-            setInput(dataRows[i]);
-            feedForward();
-        }
-        return new Matrix(y);
-    }
-
-    @Override
-    public Matrix getInput() {
-        return input.copy();
-    }
-
-    @Override
-    public void setInput(Matrix vector) {
-        neurons[0] = vector;
-        input = vector;
-    }
-
-    public Matrix sigmoid(Matrix m) {
-        return MathUtils.applyFunction(m, sigmoid);
-    }
 }

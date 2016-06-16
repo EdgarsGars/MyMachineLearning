@@ -21,8 +21,8 @@ public class MatrixUtilsTest {
 
     @Test
     public void testGetRandom_int_int() {
-        Matrix x1 = MatrixUtils.getRandom(8, 9);
-        Matrix x2 = MatrixUtils.getRandom(8, 9);
+        Matrix x1 = MatrixUtils.rand(8, 9);
+        Matrix x2 = MatrixUtils.rand(8, 9);
         assertTrue(x1.getRowCount() == 8);
         assertTrue(x2.getCollumCount() == 9);
         assertNotEquals(x1, x2);
@@ -30,7 +30,7 @@ public class MatrixUtilsTest {
 
     @Test
     public void testGetRandom_4args() {
-        Matrix x = MatrixUtils.getRandom(2, 3, -10, 10);
+        Matrix x = MatrixUtils.rand(2, 3, -10, 10);
         assertTrue(x.getRowCount() == 2);
         assertTrue(x.getCollumCount() == 3);
         assertTrue(x.get(0, 0) >= -10 && x.get(0, 0) <= 10);
@@ -44,12 +44,12 @@ public class MatrixUtilsTest {
 
     @Test
     public void testGetIdentical() {
-        Matrix x = MatrixUtils.getIdentical(3);
+        Matrix x = MatrixUtils.eye(3);
         assertTrue(x.getRowCount() == 3);
         assertTrue(x.getCollumCount() == 3);
         assertTrue(x.get(0, 0) == 1 && x.get(1, 1) == 1 && x.get(2, 2) == 1);
         assertTrue(x.get(0, 1) == 0 && x.get(0, 2) == 0 && x.get(1, 0) == 0 && x.get(1, 2) == 0 && x.get(2, 0) == 0 && x.get(2, 1) == 0);
-        Matrix y = MatrixUtils.getIdentical(9);
+        Matrix y = MatrixUtils.eye(9);
         assertTrue(y.getRowCount() == 9);
         assertTrue(y.getCollumCount() == 9);
         for (int r = 0; r < 9; r++) {
@@ -61,7 +61,7 @@ public class MatrixUtilsTest {
 
     @Test
     public void testGetOnes() {
-        Matrix x = MatrixUtils.getOnes(5, 6);
+        Matrix x = MatrixUtils.ones(5, 6);
         for (int r = 0; r < 5; r++) {
             for (int k = 0; k < 6; k++) {
                 assertTrue(x.get(r, k) == 1);
@@ -237,11 +237,11 @@ public class MatrixUtilsTest {
     public void testEig() {
         Matrix x = new Matrix("[1 2 3 ;4 5 6; 7 8 9]");
         Matrix c = MatrixUtils.cov(x.T());
-                System.out.println("COV="+c);
+        System.out.println("COV=" + c);
         Matrix[] VD = MatrixUtils.eig(c);
         //System.out.println(VD[0].toStringExcel());
-       // System.out.println(VD[1].toStringExcel());
-        
+        // System.out.println(VD[1].toStringExcel());
+
     }
 
     @Test
@@ -254,6 +254,31 @@ public class MatrixUtilsTest {
 
     @Test
     public void testPca() {
+    }
+
+    @Test
+    public void testAnd() {
+        Matrix x = new Matrix("[ 1 0; 0 1]");
+        Matrix y = new Matrix("[1 1;0 0]");
+        Matrix expected = new Matrix("[1 0; 0 0]");
+        assertTrue(expected.equals(MatrixUtils.and(x, y)));
+    }
+    
+    @Test
+    public void testOr() {
+        Matrix x = new Matrix("[ 1 0; 0 1]");
+        Matrix y = new Matrix("[1 1;0 0]");
+        Matrix expected = new Matrix("[1 1; 0 1]");
+        assertTrue(expected.equals(MatrixUtils.or(x, y)));
+    }
+    
+    
+    @Test
+    public void testXor() {
+        Matrix x = new Matrix("[ 1 0; 0 1]");
+        Matrix y = new Matrix("[1 1;0 0]");
+        Matrix expected = new Matrix("[0 1; 0 1]");
+        assertTrue(expected.equals(MatrixUtils.xor(x, y)));
     }
 
 }

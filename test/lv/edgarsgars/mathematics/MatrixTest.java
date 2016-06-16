@@ -8,6 +8,7 @@ package lv.edgarsgars.mathematics;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import lv.edgarsgars.utils.MatrixUtils;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -488,6 +489,19 @@ public class MatrixTest {
         assertTrue(rez.get(0, 1) == 4.0d);
         assertTrue(rez.get(0, 2) == 5.0d);
 
+    }
+    
+    
+    @Test
+    public void testIsLogical(){
+        Matrix x = new Matrix(3,3);
+        Matrix y = MatrixUtils.ones(5, 5);
+        Matrix z = MatrixUtils.eye(4);
+        Matrix t = MatrixUtils.rand(3, 3);
+        assertTrue(x.isLogical());
+        assertTrue(y.isLogical());
+        assertTrue(z.isLogical());
+        assertFalse(t.isLogical());
     }
 
 }

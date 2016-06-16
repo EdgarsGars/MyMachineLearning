@@ -97,6 +97,53 @@ public class Matrix implements Iterable<Matrix> {
         matrix[r][k] = value;
     }
 
+    public void set(String cond, double value) {
+        set(conditon(cond), value);
+    }
+
+    public void set(Matrix mask, double value) {
+        for (int i = 0; i < getRowCount(); i++) {
+            for (int j = 0; j < getCollumCount(); j++) {
+                if (mask.get(i, j) == 1) {
+                    set(value, i, j);
+                }
+            }
+        }
+    }
+
+    public void set(String row, String col, Matrix x) {
+        int rstart = Integer.parseInt(row.split(":")[0]);
+        int rend = Integer.parseInt(row.split(":")[1]);
+        int cstart = Integer.parseInt(row.split(":")[0]);
+        int cend = Integer.parseInt(row.split(":")[1]);
+        if (rstart >= 0 && cstart >= 0 && rend < getRowCount() && cend < getCollumCount()) {
+            for (int i = 0; i < x.getRowCount(); i++) {
+                for (int j = 0; j < x.getCollumCount(); j++) {
+                    matrix[rstart + i][cstart + j] = x.get(i, j);
+                }
+            }
+        }
+    }
+
+    public Matrix get(String row, String col) {
+
+        int rstart = Integer.parseInt(row.split(":")[0]);
+        int rend = Integer.parseInt(row.split(":")[1]);
+        int cstart = Integer.parseInt(col.split(":")[0]);
+        int cend = Integer.parseInt(col.split(":")[1]);
+        Matrix res = new Matrix(0, 0);
+        if (rstart >= 0 && cstart >= 0 && rend < getRowCount() && cend < getCollumCount()) {
+            res = new Matrix(rend - rstart + 1, cend - cstart + 1);
+            //  System.out.println(res.size()[0] + " " + res.size()[1]);
+            for (int i = 0; i < res.getRowCount(); i++) {
+                for (int j = 0; j < res.getCollumCount(); j++) {
+                    res.set(matrix[rstart + i][cstart + j], i, j);
+                }
+            }
+        }
+        return res;
+    }
+
     public Matrix toVector() {
         int r = matrix.length;
         int k = matrix[0].length;
@@ -444,11 +491,12 @@ public class Matrix implements Iterable<Matrix> {
     }
 
     public Matrix conditon(String condition) {
-        ScriptEngine se = new ScriptEngineManager().getEngineByName("JavaScript");
-        Matrix y = new Matrix(getRowCount(), getCollumCount());
+        ScriptEngine se = MatrixUtils.se;
+        final Matrix y = new Matrix(getRowCount(), getCollumCount());
         try {
-            for (int i = 0; i < getRowCount(); i++) {
-                for (int j = 0; j < getCollumCount(); j++) {
+
+            for (int j = 0; j < getCollumCount(); j++) {
+                for (int i = 0; i < getRowCount(); i++) {
                     String myExpression = condition.replaceAll("x", "" + get(i, j));
                     y.set(se.eval(myExpression).toString().equals("true") ? 1.0 : 0.0, i, j);
                 }
@@ -460,6 +508,7 @@ public class Matrix implements Iterable<Matrix> {
     }
 
     public Matrix conditon(String condition, Matrix b) {
+
         ScriptEngine se = new ScriptEngineManager().getEngineByName("JavaScript");
         Matrix y = new Matrix(getRowCount(), getCollumCount());
         try {
@@ -525,6 +574,10 @@ public class Matrix implements Iterable<Matrix> {
             }
         }
         return mean / (size()[0] * size()[1]);
+    }
+
+    public boolean isLogical() {
+        return conditon("x == 1 || x == 0").sum() == getRowCount() * getCollumCount();
     }
 
 }

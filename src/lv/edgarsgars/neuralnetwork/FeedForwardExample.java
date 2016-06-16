@@ -5,14 +5,17 @@
  */
 package lv.edgarsgars.neuralnetwork;
 
+import java.util.HashMap;
+import java.util.Map;
 import lv.edgarsgars.mathematics.Matrix;
 
 /**
  *
- * @author Edgar_000
+ * @author edgars.garsneks
  */
-public interface TrainingMethod {
+public class FeedForwardExample {
 
-    public double train(NeuralNetwork net, Matrix data, Matrix classes);
-
+    public static void main(String[] args) {
+        
+    }
 }
