@@ -75,6 +75,17 @@ public class Matrix implements Iterable<Matrix> {
         }
     }
 
+    public Matrix(String values, int r, int k) {
+        this.matrix = new double[r][k];
+        String[] vals = values.split(",");
+        for (int i = 0; i < r * k; i++) {
+            int row = i / k;
+            int col = (i - row * k) % k;
+
+            this.matrix[row][col] = Double.parseDouble(vals[i]);
+        }
+    }
+
     public double get(int r, int k) {
         return matrix[r][k];
     }
@@ -254,16 +265,18 @@ public class Matrix implements Iterable<Matrix> {
 
     @Override
     public String toString() {
-        String s = "[";
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
         for (double[] vector : matrix) {
             for (double d : vector) {
-                s += d + " ";
+                builder.append(d);
+                builder.append(' ');
             }
-            s += ";";
+            builder.append(';');
 
         }
-        s += "]";
-        return s;
+        builder.append(']');
+        return builder.toString();
     }
 
     public String toStringExcel() {
@@ -491,37 +504,37 @@ public class Matrix implements Iterable<Matrix> {
     }
 
     public Matrix conditon(String condition) {
-        ScriptEngine se = MatrixUtils.se;
-        final Matrix y = new Matrix(getRowCount(), getCollumCount());
+        ScriptEngine en = MatrixUtils.se;
+        String jsArr = toString().replace("[", "[[").replace(" ;]", "]]").replaceAll(" ;", "],[").replaceAll(" ", ",");
+        String expression = "var mat = " + jsArr + "; for(var i =0;i<" + getRowCount() + ";i++)for(var j =0;j<" + getCollumCount() + ";j++)if(" + condition.replaceAll("x", "mat[i][j]") + ")mat[i][j]=1;else mat[i][j]=0; var res = mat.toString();";
         try {
+            en.eval(expression);
 
-            for (int j = 0; j < getCollumCount(); j++) {
-                for (int i = 0; i < getRowCount(); i++) {
-                    String myExpression = condition.replaceAll("x", "" + get(i, j));
-                    y.set(se.eval(myExpression).toString().equals("true") ? 1.0 : 0.0, i, j);
-                }
-            }
+            String result = en.get("res").toString();
+            Matrix res = new Matrix(result, getRowCount(), getCollumCount());
+            return res;
         } catch (ScriptException ex) {
-            Logger.getLogger(SimpleClassifier.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Matrix.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return y;
+        return null;
     }
 
     public Matrix conditon(String condition, Matrix b) {
 
-        ScriptEngine se = new ScriptEngineManager().getEngineByName("JavaScript");
-        Matrix y = new Matrix(getRowCount(), getCollumCount());
+        ScriptEngine en = MatrixUtils.se;
+        String jsArr = toString().replace("[", "[[").replace(" ;]", "]]").replaceAll(" ;", "],[").replaceAll(" ", ",");
+        String jsArr2 = b.toString().replace("[", "[[").replace(" ;]", "]]").replaceAll(" ;", "],[").replaceAll(" ", ",");
+        String expression = "var mat = " + jsArr + "; var mat2 = " + jsArr2 + "; for(var i =0;i<" + getRowCount() + ";i++)for(var j =0;j<" + getCollumCount() + ";j++)if(" + condition.replaceAll("x", "mat[i][j]").replaceAll("y", "mat2[i][j]") + ")mat[i][j]=1;else mat[i][j]=0; var res = mat.toString();";
         try {
-            for (int i = 0; i < getRowCount(); i++) {
-                for (int j = 0; j < getCollumCount(); j++) {
-                    String myExpression = condition.replaceAll("x", "" + get(i, j)).replaceAll("y", "" + b.get(i, j));
-                    y.set(se.eval(myExpression).toString().equals("true") ? 1.0 : 0.0, i, j);
-                }
-            }
+            en.eval(expression);
+
+            String result = en.get("res").toString();
+            Matrix res = new Matrix(result, getRowCount(), getCollumCount());
+            return res;
         } catch (ScriptException ex) {
-            Logger.getLogger(SimpleClassifier.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Matrix.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return y;
+        return null;
     }
 
     public double sum() {
