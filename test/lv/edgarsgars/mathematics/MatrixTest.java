@@ -22,6 +22,14 @@ public class MatrixTest {
     }
 
     @Test
+    public void testCreateStringIntInt() {
+        Matrix m = new Matrix("1,2,3,4,5,6", 2, 3);
+        assertTrue(m.getRowCount() == 2);
+        assertTrue(m.getCollumCount() == 3);
+        assertTrue(m.equals(new Matrix("[1 2 3; 4 5 6]")));
+    }
+
+    @Test
     public void testGet() {
         Matrix m = new Matrix("[1 2 3; 4 5 6;]");
         assertTrue(m.get(0, 0) == 1.0d);
@@ -490,11 +498,10 @@ public class MatrixTest {
         assertTrue(rez.get(0, 2) == 5.0d);
 
     }
-    
-    
+
     @Test
-    public void testIsLogical(){
-        Matrix x = new Matrix(3,3);
+    public void testIsLogical() {
+        Matrix x = new Matrix(3, 3);
         Matrix y = MatrixUtils.ones(5, 5);
         Matrix z = MatrixUtils.eye(4);
         Matrix t = MatrixUtils.rand(3, 3);
