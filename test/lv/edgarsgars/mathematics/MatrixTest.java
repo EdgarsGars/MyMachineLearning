@@ -41,6 +41,22 @@ public class MatrixTest {
     }
 
     @Test
+    public void testGetStringString() {
+        Matrix m = new Matrix("[1 2 3 4; 5 6 7 8; 9 10 11 12]");
+        Matrix exp1 = new Matrix("[1;5;9]");
+        Matrix exp2 = new Matrix("[1 2 3 4]");
+        Matrix exp3 = new Matrix("[2 3; 6 7; 10 11]");
+        Matrix exp4 = new Matrix("[2 3 4; 6 7 8]");
+        assertTrue("[:,:]", m.equals(m.get(":", ":")));
+        assertTrue("[:,0:1]", exp1.equals(m.get(":", "0:1")));
+        assertTrue("[:,0:1]", exp2.equals(m.get("0:1", ":")));
+        assertTrue("[:,1:2]", (exp3.equals(m.get(":", "1:2"))));
+        assertTrue("[1:4,0:2]", (exp4.equals(m.get("1:4", "0:2"))));
+        //assertTrue(exp2.equals(m.get(":", ":")));
+        // assertTrue(exp3.equals(m.get(":", ":")));
+    }
+
+    @Test
     public void testSet() {
         Matrix m = new Matrix("[1 2 3; 4 5 6;]");
         m.set(-1, 0, 0);

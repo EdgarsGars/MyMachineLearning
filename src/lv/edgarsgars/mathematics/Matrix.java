@@ -5,21 +5,14 @@
  */
 package lv.edgarsgars.mathematics;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import lv.edgarsgars.classifiers.boosting.SimpleClassifier;
 import lv.edgarsgars.utils.MatrixUtils;
-import lv.edgarsgars.utils.VectorUtils;
 
 /**
  *
@@ -138,10 +131,11 @@ public class Matrix implements Iterable<Matrix> {
 
     public Matrix get(String row, String col) {
 
-        int rstart = Integer.parseInt(row.split(":")[0]);
-        int rend = Integer.parseInt(row.split(":")[1]);
-        int cstart = Integer.parseInt(col.split(":")[0]);
-        int cend = Integer.parseInt(col.split(":")[1]);
+        int rstart = row.equals(":") ? 0 : Integer.parseInt(row.split(":")[0]);
+        int rend = row.equals(":") ? getRowCount()-1 : Integer.parseInt(row.split(":")[1]);
+        int cstart = col.equals(":") ? 0 : Integer.parseInt(col.split(":")[0]);
+        int cend = col.equals(":") ? getCollumCount()-1 : Integer.parseInt(col.split(":")[1]);
+        System.out.println(rstart +":"+rend +" " + cstart+":"+cend);
         Matrix res = new Matrix(0, 0);
         if (rstart >= 0 && cstart >= 0 && rend < getRowCount() && cend < getCollumCount()) {
             res = new Matrix(rend - rstart + 1, cend - cstart + 1);
